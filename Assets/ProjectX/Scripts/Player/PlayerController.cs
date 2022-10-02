@@ -8,14 +8,6 @@ using UnityEngine;
 
 namespace ProjectX.Scripts.Player
 {
-    public class PlayerState
-    {
-        public int maxHP;
-        public float maxStamina = 100;
-        public int currentHP;
-        public float currentStamina = 100;
-    }
-
     public class PlayerController : MonoBehaviour
     {
         [SerializeField] private Animator animator;
@@ -26,7 +18,7 @@ namespace ProjectX.Scripts.Player
         [SerializeField] private PlayerControllerConfig _playerControllerConfig;
 
         private PlayerInputActions _playerInputActions;
-        private PlayerState _playerState = new PlayerState();
+        private PlayerState _playerState;
         private Vector3 _currentRotation;
         private Vector2 _currentRotationVel;
         private static readonly int IsAttack = Animator.StringToHash("IsAttack");
@@ -42,6 +34,7 @@ namespace ProjectX.Scripts.Player
         {
             _playerInputActions = new PlayerInputActions();
             _playerInputActions.InGameActions.Enable();
+            _playerState = new PlayerState(_playerControllerConfig.maxHP, _playerControllerConfig.maxStamina);
 
             _playerMovement = new PlayerMovement();
             _thirdPersonCameraMovement = new ThirdPersonCameraMovement();
@@ -138,8 +131,16 @@ namespace ProjectX.Scripts.Player
         {
             if (other.TryGetComponent<Projectile>(out var projectile))
             {
-                Destroy(other.gameObject);
-                Debug.Log($"Dmg -{projectile.damage}");
+                _playerState.currentHP -= projectile.damage;
+                
+                UIUpdater.Instance.UpdateHealth(Mathematic.Normalized(_playerState.currentHP, 0, _playerState.maxHP));
+                Destroy(projectile.gameObject);
+            }
+            else if(other.TryGetComponent<Weapon>(out var weapon))
+            {
+                _playerState.currentHP -= weapon.Damage;
+                
+                UIUpdater.Instance.UpdateHealth(Mathematic.Normalized(_playerState.currentHP, 0, _playerState.maxHP));
             }
         }
 
@@ -152,7 +153,6 @@ namespace ProjectX.Scripts.Player
             if (_playerState.currentStamina > 1f)
             {
                 _canGraduate = false;
-                Debug.Log($"Current Stamina {_playerState.currentStamina}");
                 _playerState.currentStamina -= 10f;
                 UIUpdater.Instance.UpdateStamina(Mathematic.Normalized(_playerState.currentStamina, 0,
                     _playerState.maxStamina));
@@ -177,7 +177,6 @@ namespace ProjectX.Scripts.Player
                 UIUpdater.Instance.UpdateStamina(normalized);
                 var value = normalized + 0.1f;
                 value = Mathematic.Denormalize(value, 0, _playerState.maxStamina);
-                Debug.Log($"Normalized {normalized} and value {value}");
 
                 _playerState.currentStamina = Mathf.Clamp(value, 0, _playerState.maxStamina);
             }

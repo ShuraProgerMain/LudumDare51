@@ -7,6 +7,9 @@ namespace ProjectX.Scripts.Player.Configs
     {
         [Header("Move")]
         public float moveSpeed = 1f;
+
+        public float rotationSpeed = 1f;
+        public float rotationSpeedOnAttack = 30f;
         public int maxHP;
         [Header("Attack")]
         public float attackDistance = 1f;

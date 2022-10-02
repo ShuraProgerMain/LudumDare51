@@ -1,8 +1,5 @@
-using System;
-using System.Linq;
 using System.Threading.Tasks;
 using ProjectX.Scripts.Player.Configs;
-using ProjectX.Scripts.StateMachine;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -35,7 +32,7 @@ namespace ProjectX.Scripts.AI
         private void Awake()
         {
             InitEnemy();
-            ChangeState(StateType.Idle);
+            IdleAnimation();
         }
 
         private void InitEnemy()
@@ -47,30 +44,9 @@ namespace ProjectX.Scripts.AI
 
             navMesh.stoppingDistance = enemyEntityConfig.attackDistance;
         }
-
-        protected void ChangeState(StateType stateType)
-        {
-            switch (stateType)
-            {
-                case StateType.Idle:
-                    IdleAnimation();
-                    break;
-                case StateType.Run:
-                    RunAnimation();
-                    break;
-                case StateType.Attack:
-                    AttackAnimation();
-                    break;
-                case StateType.Death:
-                    DeathAnimation();
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(stateType), stateType, null);
-            }
-
-            GC.Collect();
-        }
-
+        
+        private Vector3 _currentRotation;
+        private Vector2 _currentRotationVel;
         protected void Move(Vector3 destination)
         {
             if (!_isMoving && _canMove)
@@ -78,16 +54,27 @@ namespace ProjectX.Scripts.AI
                 RunAnimation();
                 _isMoving = true;
                 navMesh.SetDestination(destination);
-                transform.LookAt(destination);
+                // transform.LookAt(destination);
+                // _currentRotation = Vector2.SmoothDamp(transform.rotation.eulerAngles,
+                //     new Vector3(destination.x, destination.y, 0), ref _currentRotationVel,
+                //     2f);
+                // transform.rotation = Quaternion.Euler(0, _currentRotation.y, 0);
+             
+                Rotate(destination, enemyEntityConfig.rotationSpeed);
             }
+        }
+
+        private void Rotate(Vector3 destination, float speed = 1)
+        {
+            var look = Quaternion.LookRotation(destination - transform.position);
+            transform.rotation = Quaternion.Lerp(transform.rotation, look, speed * Time.deltaTime);
         }
 
         protected void Attack(Vector3 destination)
         {
-            Debug.Log("Attack");
-            transform.LookAt(destination);
+            Rotate(destination, enemyEntityConfig.rotationSpeed);
             IdleAnimation();
-            AttackAnimation();
+            AttackAnimation(destination);
         }
 
         private void IdleAnimation()
@@ -100,7 +87,7 @@ namespace ProjectX.Scripts.AI
             animator.SetFloat(Velocity, 1);
         }
 
-        private async void AttackAnimation()
+        private async void AttackAnimation(Vector3 destination)
         {
             if (_canAttack)
             {
@@ -108,6 +95,7 @@ namespace ProjectX.Scripts.AI
                 _canMove = false;
                 
                 animator.SetBool(IsAttack, true);
+                Rotate(destination, enemyEntityConfig.rotationSpeedOnAttack);
                 await Task.Delay(1000);
                 animator.SetBool(IsAttack, false);
                 _canMove = true;

@@ -5,6 +5,9 @@ namespace ProjectX.Scripts.Player.Configs
     [CreateAssetMenu (fileName = "PlayerConfig", menuName = "ProjectX/Configs/PlayerConfig")]
     public class PlayerControllerConfig : ScriptableObject
     {
+        public int maxHP = 10;
+        public float maxStamina = 100;
+        
         [Header("Walk")]
         public float moveSpeed = 1f;
         public float smoothRotateTime = .2f;

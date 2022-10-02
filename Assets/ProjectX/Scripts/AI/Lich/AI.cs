@@ -9,6 +9,7 @@ namespace ProjectX.Scripts.AI.Lich
         [SerializeField] private PlayerController player;
         [SerializeField] private Transform shotPoint;
         [SerializeField] private Projectile prefab;
+        [SerializeField] private Weapon weapon;
         private void Update()
         {
             var distance = Vector3.Distance(transform.position, player.transform.position);
@@ -28,6 +29,16 @@ namespace ProjectX.Scripts.AI.Lich
             bullet.transform.rotation = shotPoint.rotation;
             bullet.damage = enemyEntityConfig.attackDamage;
             Destroy(bullet.gameObject, 10);
+        }
+
+        public void StartDamage()
+        {
+            weapon.StartDamage();
+        }
+
+        public void StopDamage()
+        {
+            weapon.StopDamage();
         }
     }
 }

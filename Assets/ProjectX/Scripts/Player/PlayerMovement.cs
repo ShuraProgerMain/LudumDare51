@@ -19,7 +19,6 @@ namespace ProjectX.Scripts.Player
             get => _canMove;
             set
             {
-                Debug.Log($"Chagne {value}");
                 _canMove = value;
             }
         }

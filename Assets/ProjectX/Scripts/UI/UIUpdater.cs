@@ -7,6 +7,7 @@ namespace ProjectX.Scripts.UI
     {
         public static UIUpdater Instance;
 
+        [SerializeField] private Image health;
         [SerializeField] private Image stamina;
 
         private void Awake()
@@ -24,6 +25,11 @@ namespace ProjectX.Scripts.UI
         public void UpdateStamina(float value)
         {
             stamina.fillAmount = value;
+        }
+        
+        public void UpdateHealth(float value)
+        {
+            health.fillAmount = value;
         }
     }
 }
