@@ -7,6 +7,7 @@ namespace ProjectX.Scripts.Player.Configs
     {
         public int maxHP = 10;
         public float maxStamina = 100;
+        public int damage = 2;
         
         [Header("Walk")]
         public float moveSpeed = 1f;

@@ -5,6 +5,7 @@ using ProjectX.Scripts.AI.Lich;
 using ProjectX.Scripts.Player.Configs;
 using ProjectX.Scripts.UI;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace ProjectX.Scripts.Player
 {
@@ -14,8 +15,9 @@ namespace ProjectX.Scripts.Player
         [SerializeField] private CharacterController characterController;
         [SerializeField] private Transform followTarget;
         [SerializeField] private Transform playerTransform;
-        [SerializeField] private Vector2 _rotationPower = new(10, 2);
-        [SerializeField] private PlayerControllerConfig _playerControllerConfig;
+        [SerializeField] private Vector2 rotationPower = new(10, 2);
+        [SerializeField] private PlayerControllerConfig playerControllerConfig;
+        [SerializeField] private PlayerAttack _playerAttack;
 
         private PlayerInputActions _playerInputActions;
         private PlayerState _playerState;
@@ -34,19 +36,30 @@ namespace ProjectX.Scripts.Player
         {
             _playerInputActions = new PlayerInputActions();
             _playerInputActions.InGameActions.Enable();
-            _playerState = new PlayerState(_playerControllerConfig.maxHP, _playerControllerConfig.maxStamina);
+            _playerState = new PlayerState(playerControllerConfig.maxHP, playerControllerConfig.maxStamina);
 
             _playerMovement = new PlayerMovement();
             _thirdPersonCameraMovement = new ThirdPersonCameraMovement();
+            _playerAttack.Init(playerControllerConfig.damage);
 
+            SubscribeAll();
+        }
 
+        private void SubscribeAll()
+        {
             _playerInputActions.InGameActions.Move.performed += context =>
             {
                 _moveDirection = context.ReadValue<Vector2>();
             };
             _playerInputActions.InGameActions.Move.canceled += _ => { _moveDirection = Vector2.zero; };
-            _playerInputActions.InGameActions.Dash.started += _ => Dash();
-            _playerInputActions.InGameActions.Attack.started += _ => Attack();
+            _playerInputActions.InGameActions.Dash.started += Dash;
+            _playerInputActions.InGameActions.Attack.started += Attack;
+        }
+
+        private void UnsubscribeAll()
+        {
+            _playerInputActions.InGameActions.Dash.started -= Dash;
+            _playerInputActions.InGameActions.Attack.started -= Attack;
         }
 
         public void Update()
@@ -54,12 +67,13 @@ namespace ProjectX.Scripts.Player
             Move(_moveDirection);
         }
 
+
         private bool _canAttack = true;
 
         private float _attackSeries = 1;
 
         //TODO: Move to combat system
-        private async void Attack()
+        private async void Attack(InputAction.CallbackContext _)
         {
             if (_canAttack)
             {
@@ -68,7 +82,7 @@ namespace ProjectX.Scripts.Player
                 animator.SetBool(IsAttack, true);
                 animator.SetFloat("Series", _attackSeries);
 
-                await Task.Delay((int)(1000 * _playerControllerConfig.attackDelay));
+                await Task.Delay((int)(1000 * playerControllerConfig.attackDelay));
 
                 animator.SetBool(IsAttack, false);
                 _playerMovement.CanMove = true;
@@ -82,7 +96,7 @@ namespace ProjectX.Scripts.Player
             if (!_playerMovement.CanMove) return;
 
             var newPosition =
-                _playerMovement.Move(velocity, transform, _playerControllerConfig.moveSpeed, Time.deltaTime);
+                _playerMovement.Move(velocity, transform, playerControllerConfig.moveSpeed, Time.deltaTime);
 
             animator.SetFloat(Horizontal, velocity.x);
             animator.SetFloat(Vertical, velocity.y);
@@ -93,26 +107,25 @@ namespace ProjectX.Scripts.Player
 
                 _currentRotation = Vector2.SmoothDamp(playerTransform.rotation.eulerAngles,
                     new Vector3(0, followTarget.eulerAngles.y, 0), ref _currentRotationVel,
-                    _playerControllerConfig.smoothRotateTime);
+                    playerControllerConfig.smoothRotateTime);
                 playerTransform.rotation = Quaternion.Euler(0, _currentRotation.y, 0);
             }
 
             characterController.Move(newPosition);
         }
 
-        private async void Dash()
+        private async void Dash(InputAction.CallbackContext _)
         {
             if (!_playerMovement.CanDash) return;
             if (TryUseStamina())
             {
-                Debug.Log("Start dash");
-                await GraduateAsync(Progress, _playerControllerConfig.dashDuration);
-                _playerMovement.DashStop(_playerControllerConfig.dashTimeOut);
+                await GraduateAsync(Progress, playerControllerConfig.dashDuration);
+                _playerMovement.DashStop(playerControllerConfig.dashTimeOut);
 
                 void Progress(float progress)
                 {
                     var newPosition = _playerMovement.DashRun(_moveDirection, followTarget,
-                        _playerControllerConfig.dashPower, Time.deltaTime);
+                        playerControllerConfig.dashPower, Time.deltaTime);
 
                     characterController.Move(newPosition);
                 }
@@ -142,6 +155,18 @@ namespace ProjectX.Scripts.Player
                 
                 UIUpdater.Instance.UpdateHealth(Mathematic.Normalized(_playerState.currentHP, 0, _playerState.maxHP));
             }
+
+            if (_playerState.currentHP <= 0)
+            {
+                Death();
+            }
+        }
+
+        private void Death()
+        {
+            animator.SetTrigger("IsDeath");
+            this.enabled = false;
+            UnsubscribeAll();
         }
 
 
@@ -188,10 +213,10 @@ namespace ProjectX.Scripts.Player
 
             followTarget.transform.rotation *= Quaternion.AngleAxis(
                 rotate.x
-                * _rotationPower.x, Vector3.up);
+                * rotationPower.x, Vector3.up);
 
             followTarget.rotation *= Quaternion.AngleAxis(
-                (rotate.y * _rotationPower.y)
+                (rotate.y * rotationPower.y)
                 * -1, Vector3.right);
 
 

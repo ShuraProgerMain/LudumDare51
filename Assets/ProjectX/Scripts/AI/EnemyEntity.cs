@@ -1,14 +1,21 @@
 using System.Threading.Tasks;
+using ProjectX.Scripts.AI.Lich;
 using ProjectX.Scripts.Player.Configs;
 using UnityEngine;
 using UnityEngine.AI;
 
 namespace ProjectX.Scripts.AI
 {
-    public class EnemyEntityData
+    public class EnemyEntityState
     {
         public int maxHP;
         public int currentHP;
+
+        public EnemyEntityState(int maxHP)
+        {
+            this.maxHP = maxHP;
+            currentHP = this.maxHP;
+        }
     }
 
     [RequireComponent(typeof(NavMeshAgent))]
@@ -18,16 +25,16 @@ namespace ProjectX.Scripts.AI
         [SerializeField] protected NavMeshAgent navMesh;
         [SerializeField] protected EnemyEntityConfig enemyEntityConfig;
 
-        private EnemyEntityData _data = new EnemyEntityData();
+        private EnemyEntityState _state;
 
         [Header("AnimationKeys")] 
         private readonly int Velocity = Animator.StringToHash("Velocity");
         private readonly int IsAttack = Animator.StringToHash("IsAttack");
         private readonly int IsDeath = Animator.StringToHash("IsDeath");
 
-        private bool _canMove = true;
-        private bool _isMoving = false;
-        private bool _canAttack = true;
+        [SerializeField]private bool _canMove = true;
+        [SerializeField]private bool _isMoving = false;
+        [SerializeField]private bool _canAttack = true;
 
         private void Awake()
         {
@@ -38,9 +45,8 @@ namespace ProjectX.Scripts.AI
         private void InitEnemy()
         {
             IdleAnimation();
-            
-            _data.maxHP = enemyEntityConfig.maxHP;
-            _data.currentHP = enemyEntityConfig.maxHP;
+
+            _state = new EnemyEntityState(enemyEntityConfig.maxHP);
 
             navMesh.stoppingDistance = enemyEntityConfig.attackDistance;
         }
@@ -49,17 +55,18 @@ namespace ProjectX.Scripts.AI
         private Vector2 _currentRotationVel;
         protected void Move(Vector3 destination)
         {
-            if (!_isMoving && _canMove)
+            if (!_canAttack)
+            {
+                _canAttack = true;
+                _isMoving = false;
+            }
+            
+            if (_canMove)
             {
                 RunAnimation();
                 _isMoving = true;
                 navMesh.SetDestination(destination);
-                // transform.LookAt(destination);
-                // _currentRotation = Vector2.SmoothDamp(transform.rotation.eulerAngles,
-                //     new Vector3(destination.x, destination.y, 0), ref _currentRotationVel,
-                //     2f);
-                // transform.rotation = Quaternion.Euler(0, _currentRotation.y, 0);
-             
+
                 Rotate(destination, enemyEntityConfig.rotationSpeed);
             }
         }
@@ -80,6 +87,7 @@ namespace ProjectX.Scripts.AI
         private void IdleAnimation()
         {
             animator.SetFloat(Velocity, 0);
+            _isMoving = false;
         }
 
         private void RunAnimation()
@@ -99,6 +107,7 @@ namespace ProjectX.Scripts.AI
                 await Task.Delay(1000);
                 animator.SetBool(IsAttack, false);
                 _canMove = true;
+
                 await Task.Delay((int)(1000 * enemyEntityConfig.attackDelay));
                 _canAttack = true;
             }
@@ -107,6 +116,22 @@ namespace ProjectX.Scripts.AI
         private void DeathAnimation()
         {
             animator.SetTrigger(IsDeath);
+        }
+
+        private async void OnTriggerEnter(Collider other)
+        {
+            if (other.TryGetComponent<Weapon>(out var weapon))
+            {
+                _state.currentHP -= weapon.Damage;   
+            }
+
+            if (_state.currentHP <= 0)
+            {
+                DeathAnimation();
+                this.enabled = false;
+                await Task.Delay(2000);
+                gameObject.SetActive(false);
+            }
         }
     }
 }

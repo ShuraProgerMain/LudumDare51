@@ -14,6 +14,7 @@ namespace ProjectX.Scripts.AI.Lich
                 _canGetDamage = false;
                 return !_canGetDamage ? damage : 0;
             }
+            set => damage = value;
         }
 
         public void StartDamage()
