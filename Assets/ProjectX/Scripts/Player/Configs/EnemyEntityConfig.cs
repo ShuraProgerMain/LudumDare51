@@ -11,5 +11,6 @@ namespace ProjectX.Scripts.Player.Configs
         [Header("Attack")]
         public float attackDistance = 1f;
         public float attackDelay = 1f;
+        public int attackDamage = 1;
     }
 }

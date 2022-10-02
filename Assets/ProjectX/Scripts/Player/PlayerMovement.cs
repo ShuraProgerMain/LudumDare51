@@ -14,9 +14,22 @@ namespace ProjectX.Scripts.Player
         private bool _canDash = true;
         private bool _dashProcess = false;
 
+        public bool CanMove
+        {
+            get => _canMove;
+            set
+            {
+                Debug.Log($"Chagne {value}");
+                _canMove = value;
+            }
+        }
+
+        public bool CanDash => _canDash;
+
+
         public Vector3 Move(Vector2 velocity, Transform directTransform, float speed, float deltaTime)
         {
-            if (_canMove)
+            if (CanMove)
             {
                 _currentVelocity = Vector2.SmoothDamp(_currentVelocity, velocity, ref _smoothInputVelocity, .2f);
 
@@ -33,18 +46,16 @@ namespace ProjectX.Scripts.Player
 
         public Vector3 DashRun(Vector2 velocity, Transform directTransform, float power, float deltaTime)
         {
-            if (_canDash || _dashProcess)
+            if (CanDash || _dashProcess)
             {
                 _canDash = false;
-                _canMove = false;
+                CanMove = false;
                 _dashProcess = true;
                 
                 //Нужно толкать прямо и все
                 var dashPower = power * deltaTime;
                 var newPosition = (directTransform.forward  * dashPower);
                 newPosition.y = 0;
-
-                Debug.Log($"Into dash {newPosition} {velocity}");
 
                 return newPosition;
             }
@@ -54,7 +65,7 @@ namespace ProjectX.Scripts.Player
 
         public async void DashStop(float timeOut = 1.5f)
         {
-            _canMove = true;
+            CanMove = true;
             _dashProcess = false;
 
             await Task.Delay((int)(1000 * timeOut));

@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84968f22e2eede14981489a2a0dbfe4d, type: 3}
   m_Name: PlayerConfig
   m_EditorClassIdentifier: 
-  moveSpeed: 1
-  smoothRotateTime: 0.2
+  moveSpeed: 2.5
+  smoothRotateTime: 0.05
   dashDuration: 0.2
   dashPower: 10
+  dashTimeOut: 0.2
+  attackDelay: 1

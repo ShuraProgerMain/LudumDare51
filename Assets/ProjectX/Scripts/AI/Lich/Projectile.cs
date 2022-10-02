@@ -6,10 +6,9 @@ namespace ProjectX.Scripts.AI.Lich
     {
         public int damage;
         [SerializeField] private float speed;
-        [SerializeField] private Rigidbody rigidbody;
-        private void FixedUpdate()
+        private void Update()
         {
-            rigidbody.velocity += Vector3.forward * speed;
+            transform.position += transform.forward * speed * Time.deltaTime;
         }
     }
 }

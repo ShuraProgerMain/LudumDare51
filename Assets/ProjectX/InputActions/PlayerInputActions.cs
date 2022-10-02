@@ -44,6 +44,15 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Attack"",
+                    ""type"": ""Button"",
+                    ""id"": ""5e768803-ef1e-4e60-a5d4-da648706f12f"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -178,6 +187,28 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                     ""action"": ""Dash"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""fed3befa-7045-4ccb-aeae-8b44d8ca104c"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Attack"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ddda5513-c9e8-4376-81aa-2036b7f40ecf"",
+                    ""path"": ""<Gamepad>/rightShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""XboxGamepad"",
+                    ""action"": ""Attack"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -216,6 +247,7 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
         m_InGameActions = asset.FindActionMap("InGameActions", throwIfNotFound: true);
         m_InGameActions_Move = m_InGameActions.FindAction("Move", throwIfNotFound: true);
         m_InGameActions_Dash = m_InGameActions.FindAction("Dash", throwIfNotFound: true);
+        m_InGameActions_Attack = m_InGameActions.FindAction("Attack", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -277,12 +309,14 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
     private IInGameActionsActions m_InGameActionsActionsCallbackInterface;
     private readonly InputAction m_InGameActions_Move;
     private readonly InputAction m_InGameActions_Dash;
+    private readonly InputAction m_InGameActions_Attack;
     public struct InGameActionsActions
     {
         private @PlayerInputActions m_Wrapper;
         public InGameActionsActions(@PlayerInputActions wrapper) { m_Wrapper = wrapper; }
         public InputAction @Move => m_Wrapper.m_InGameActions_Move;
         public InputAction @Dash => m_Wrapper.m_InGameActions_Dash;
+        public InputAction @Attack => m_Wrapper.m_InGameActions_Attack;
         public InputActionMap Get() { return m_Wrapper.m_InGameActions; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -298,6 +332,9 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                 @Dash.started -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnDash;
                 @Dash.performed -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnDash;
                 @Dash.canceled -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnDash;
+                @Attack.started -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnAttack;
+                @Attack.performed -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnAttack;
+                @Attack.canceled -= m_Wrapper.m_InGameActionsActionsCallbackInterface.OnAttack;
             }
             m_Wrapper.m_InGameActionsActionsCallbackInterface = instance;
             if (instance != null)
@@ -308,6 +345,9 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                 @Dash.started += instance.OnDash;
                 @Dash.performed += instance.OnDash;
                 @Dash.canceled += instance.OnDash;
+                @Attack.started += instance.OnAttack;
+                @Attack.performed += instance.OnAttack;
+                @Attack.canceled += instance.OnAttack;
             }
         }
     }
@@ -334,5 +374,6 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
     {
         void OnMove(InputAction.CallbackContext context);
         void OnDash(InputAction.CallbackContext context);
+        void OnAttack(InputAction.CallbackContext context);
     }
 }
