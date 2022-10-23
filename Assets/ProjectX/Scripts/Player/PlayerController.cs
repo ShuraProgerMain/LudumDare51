@@ -91,6 +91,9 @@ namespace ProjectX.Scripts.Player
             }
         }
 
+        
+        Quaternion targetRotation;
+
         private void Move(Vector2 velocity)
         {
             if (!_playerMovement.CanMove) return;
@@ -98,17 +101,30 @@ namespace ProjectX.Scripts.Player
             var newPosition =
                 _playerMovement.Move(velocity, transform, playerControllerConfig.moveSpeed, Time.deltaTime);
 
-            animator.SetFloat(Horizontal, velocity.x);
-            animator.SetFloat(Vertical, velocity.y);
+            animator.SetFloat(Horizontal, _playerMovement.CurrentVelocity.x);
+            animator.SetFloat(Vertical, _playerMovement.CurrentVelocity.y);
 
             if (velocity != Vector2.zero)
             {
-                CharacterRotate(velocity);
+                
+                Vector3 localMovementDirection = new Vector3(velocity.x, 0f, velocity.y);
+                
+                Vector3 forward = Quaternion.Euler(0f, 0f, 0f) * Vector3.forward;
+                forward.y = 0f;
+                forward.Normalize();
+                
+                if (Mathf.Approximately(Vector3.Dot(localMovementDirection, Vector3.forward), -1.0f))
+                {
+                    targetRotation = Quaternion.LookRotation(-forward);
+                }
+                else
+                {
+                    targetRotation = Quaternion.LookRotation(localMovementDirection);
+                }
+                
+                targetRotation = Quaternion.RotateTowards(playerTransform.rotation, targetRotation, playerControllerConfig.help * Time.deltaTime);
 
-                _currentRotation = Vector2.SmoothDamp(playerTransform.rotation.eulerAngles,
-                    new Vector3(0, followTarget.eulerAngles.y, 0), ref _currentRotationVel,
-                    playerControllerConfig.smoothRotateTime);
-                playerTransform.rotation = Quaternion.Euler(0, _currentRotation.y, 0);
+                playerTransform.rotation = targetRotation;
             }
 
             characterController.Move(newPosition);
@@ -124,20 +140,12 @@ namespace ProjectX.Scripts.Player
 
                 void Progress(float progress)
                 {
-                    var newPosition = _playerMovement.DashRun(_moveDirection, followTarget,
+                    var newPosition = _playerMovement.DashRun(_moveDirection, playerTransform,
                         playerControllerConfig.dashPower, Time.deltaTime);
 
                     characterController.Move(newPosition);
                 }
             }
-        }
-
-        private void CharacterRotate(Vector3 direction)
-        {
-            var move = new Vector3(direction.x, 0, direction.y);
-
-
-            followTarget.forward = move;
         }
 
         private void OnTriggerEnter(Collider other)

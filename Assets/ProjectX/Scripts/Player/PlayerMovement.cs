@@ -25,16 +25,18 @@ namespace ProjectX.Scripts.Player
 
         public bool CanDash => _canDash;
 
+        public Vector2 CurrentVelocity => _currentVelocity;
+
 
         public Vector3 Move(Vector2 velocity, Transform directTransform, float speed, float deltaTime)
         {
             if (CanMove)
             {
-                _currentVelocity = Vector2.SmoothDamp(_currentVelocity, velocity, ref _smoothInputVelocity, .2f);
+                _currentVelocity = Vector2.SmoothDamp(CurrentVelocity, velocity, ref _smoothInputVelocity, .2f);
 
                 var moveSpeed = speed * deltaTime;
-                var newPosition = (directTransform.forward * _currentVelocity.y * moveSpeed) +
-                                  (directTransform.right * _currentVelocity.x * moveSpeed);
+                var newPosition = (directTransform.forward * CurrentVelocity.y * moveSpeed) +
+                                  (directTransform.right * CurrentVelocity.x * moveSpeed);
                 newPosition.y = 0;
 
                 return newPosition;

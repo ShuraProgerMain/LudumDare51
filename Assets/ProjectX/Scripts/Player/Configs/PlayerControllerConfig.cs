@@ -11,7 +11,9 @@ namespace ProjectX.Scripts.Player.Configs
         
         [Header("Walk")]
         public float moveSpeed = 1f;
-        public float smoothRotateTime = .2f;
+        [Range(.15f, 2f)]
+        public float smoothRotateTime = .15f;
+        public float help = .2f;
         [Header("Dash")]
         public float dashDuration = .2f;
         public float dashPower = 10;

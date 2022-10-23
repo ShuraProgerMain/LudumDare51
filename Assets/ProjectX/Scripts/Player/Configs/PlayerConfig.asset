@@ -14,9 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHP: 10
   maxStamina: 100
-  moveSpeed: 2.5
-  smoothRotateTime: 0.05
+  damage: 2
+  moveSpeed: 4
+  smoothRotateTime: 0.15
+  help: 650
   dashDuration: 0.2
   dashPower: 10
   dashTimeOut: 0.2
-  attackDelay: 0.3
+  attackDelay: 0.55
